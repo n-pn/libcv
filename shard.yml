@@ -1,0 +1,9 @@
+name: chivi
+version: 0.1.0
+
+authors:
+  - Nipinium <nipinium@gmail.com>
+
+crystal: 0.32.1
+
+license: MIT
