@@ -2,40 +2,32 @@ require "./chivi/*"
 
 module Chivi
   extend self
+  VERSION = "0.2.0"
 
-  VERSION = "0.1.0"
+  alias DictList = Array(Dict)
 
-  DICTS = {} of String => Dict
-
-  def load_dict(file)
-    DICTS[file] ||= Dict.new(file)
+  def translate(dicts : DictList, input : String, generic = false)
+    tokens = convert(dicts, input, cap_first: generic, ignore_de: generic)
+    render_tokens(tokens)
   end
 
-  def convert(dicts : Array(Dict), input : String, mode : Symbol = :chap)
-    convert(dicts, Util.split_lines(input), mode)
+  def render_tokens(tokens : Array(Core::Token))
+    tokens.map(&.[1]).join
   end
 
-  def convert(dicts : Array(Dict), lines : Array(String), mode : Symbol = :chap)
-    case mode
-    when :head
-      lines.map { |line| convert_head(dicts, line) }
-    when :para
-      lines.map { |line| convert_para(dicts, line) }
-    else # :chap
-      output = [convert_head(dicts, lines.first)]
-      lines[1..].each { |line| output << convert_para(dicts, line) }
-      output
-    end
+  def convert(dicts : DictList, input : String, cap_first = true, ignore_de = true)
+    tokens = tokenize(dicts, input)
+    Core.apply_grammar(tokens, cap_first, ignore_de)
   end
 
-  def convert_head(dicts : Array(Dict), input : String)
+  def convert_title(dicts : DictList, input : String)
     if match = Util.split_head(input)
       head_text, head_trash, zh_index, vi_index, tail_trash, tail_text = match
 
       output = Core::TokenList.new
 
       if !head_text.empty?
-        output.concat convert_para(dicts, head_text)
+        output.concat convert(dicts, head_text)
         output << {head_trash, " - ", 0}
       elsif !head_trash.empty?
         output << {head_trash, "", 0}
@@ -45,36 +37,19 @@ module Chivi
 
       if !tail_text.empty?
         output << {tail_trash, ": ", 0}
-        output.concat convert_head(dicts, tail_text) # incase volume title is mixed with chapter title
+        output.concat convert_title(dicts, tail_text) # incase volume title is mixed with chapter title
       elsif !tail_trash.empty?
         output << {tail_trash, "", 0}
       end
 
       output
     else
-      convert_para(dicts, input)
+      convert(dicts, input)
     end
   end
 
-  def convert_para(dicts : Array(Dict), input : String)
+  def tokenize(dicts : DictList, input : String)
     chars = Util.normalize(input)
-    convert_para(dicts, chars)
-  end
-
-  def convert_para(dicts : Array(Dict), chars : Array(Char))
-    tokens = Core.tokenize(dicts, chars)
-    Core.apply_grammar(tokens)
-  end
-
-  def translate(dicts : Array(Dict), input : String, cap = true)
-    chars = Util.normalize(input)
-    tokens = Core.tokenize(dicts, chars)
-    Core.apply_grammar(tokens, cap).map(&.[1]).join
-  end
-
-  def tokenize(dicts : Array(Dict), input : String)
-    # normally tokenize process return tokens in incorrect order to avoid
-    # array allocation
-    Core.tokenize(dicts, Util.normalize(input)).reverse
+    Core.tokenize(dicts, chars)
   end
 end

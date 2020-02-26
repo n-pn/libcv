@@ -52,6 +52,38 @@ module Chivi::Core
     res
   end
 
+  def apply_grammar(tokens : TokenList, cap_first = true, ignore_de = true) : TokenList
+    res = TokenList.new
+
+    should_apply_cap = cap_first
+    should_add_space = false
+
+    tokens = combine_similar(tokens)
+
+    tokens.each do |token|
+      key, val, dic = token
+      if key == "的" && ignore_de
+        res << {key, "", 0}
+        next
+      end
+
+      res << {"", " ", 0} if should_add_space && space_before?(key)
+
+      if should_apply_cap && val[0].alphanumeric?
+        cap = val[0].upcase + val[1..]
+        token = {key, cap, dic}
+        should_apply_cap = false
+      end
+
+      should_apply_cap ||= cap_after?(key)
+      should_add_space = space_after?(key)
+
+      res << token
+    end
+
+    res
+  end
+
   private def combine_similar(tokens : TokenList) : TokenList
     res = TokenList.new
     idx = tokens.size - 1
@@ -89,37 +121,6 @@ module Chivi::Core
   private def similar?(a : Char, b : Char) : Bool
     return true if a == b
     a.alphanumeric? && b.alphanumeric?
-  end
-
-  def apply_grammar(tokens : TokenList, cap = true) : TokenList
-    res = TokenList.new
-
-    apply_cap = cap
-    add_space = false
-
-    tokens = combine_similar(tokens)
-    tokens.each do |token|
-      key, val, dic = token
-      if key == "的"
-        res << {key, "", 0}
-        next
-      end
-
-      res << {"", " ", 0} if add_space && space_before?(key)
-
-      if apply_cap && val[0].alphanumeric?
-        cap = val[0].upcase + val[1..]
-        token = {key, cap, dic}
-        apply_cap = false
-      end
-
-      apply_cap ||= cap_after?(key)
-      add_space = space_after?(key)
-
-      res << token
-    end
-
-    res
   end
 
   private def space_before?(key : String)

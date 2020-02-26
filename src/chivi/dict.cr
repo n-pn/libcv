@@ -29,15 +29,19 @@ class Chivi::Dict
     end
   end
 
-  getter items : Array(Item)
+  getter list : Array(Item)
   getter size : Int32
 
-  def initialize(@file : String, load = true)
-    @items = [] of Item
-    @size = 0
+  @list = Array(Item).new
+  @trie = Node.new
+  @size = 0
 
-    @trie = Node.new
-    load! if File.exists?(@file) && load
+  def self.load!(file : String)
+    dict = new(file)
+    dict.load!(file)
+  end
+
+  def initialize(@file : String)
   end
 
   def load!(file : String = @file)
@@ -52,6 +56,8 @@ class Chivi::Dict
 
     elapse = realtime.total_milliseconds
     puts "- Loaded [#{file.colorize(:yellow)}], lines: #{count.colorize(:yellow)}, time: #{elapse.colorize(:yellow)}ms"
+
+    self
   end
 
   def set(key : String, val : String) : String
@@ -77,7 +83,7 @@ class Chivi::Dict
       prev.val = item.val
       @size -= 1 unless old.empty?
     else
-      @items << item
+      @list << item
       node.item = item
     end
 
@@ -113,9 +119,9 @@ class Chivi::Dict
   end
 
   def save!(file : String = @file, sort : Bool = false)
-    items = sort ? @items.sort_by { |x| {-x.key.size, x.key} } : @items
+    list = sort ? @list.sort_by { |x| {-x.key.size, x.key} } : @list
 
-    File.open(file, "w") { |f| items.each { |i| f.puts i } }
+    File.open(file, "w") { |f| list.each { |i| f.puts i } }
     puts "- Save to [#{file.colorize(:yellow)}], items: #{@size.colorize(:yellow)}"
   end
 end

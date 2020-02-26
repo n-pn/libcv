@@ -11,11 +11,15 @@ text = "第十三集 龙章凤仪 第一章 屠龙之术
 
 程宗扬打趣道：“没跟你商量，就抢了你的正使职位，抱歉抱歉。”"
 
-generic = Chivi.load_dict(".dicts/generic.txt")
-combine = Chivi.load_dict(".dicts/combine.txt")
+generic = Chivi::Dict.load! ".dicts/generic.txt"
+combine = Chivi::Dict.load! ".dicts/combine.txt"
 
-lines = Chivi.convert([generic, combine], text)
+dicts = [generic, combine]
 
-lines.each do |line|
-  puts line.map(&.[1]).join("")
+Chivi::Util.split_lines(text).each_with_index do |line, idx|
+  if idx == 0
+    puts Chivi.render_tokens Chivi.convert_title(dicts, line)
+  else
+    puts Chivi.render_tokens Chivi.convert(dicts, line)
+  end
 end

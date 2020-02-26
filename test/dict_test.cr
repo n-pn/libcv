@@ -19,6 +19,6 @@ print "\ndel b: ", test.del "b"
 
 puts "\n size: #{test.size}"
 
-puts test.items.join("\n")
+puts test.list.join("\n")
 
 test.save! sort: true
