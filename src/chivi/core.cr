@@ -7,29 +7,29 @@ module Chivi::Core
   alias TokenList = Array(Token)
 
   def tokenize(dicts : Array(Dict), input : Array(Char)) : TokenList
-    selects = [{"", "", 0}]
+    selects = [{Dict::Item.new("", ""), 0}]
     weights = [0.0]
 
     input.each_with_index do |char, idx|
-      selects << {char.to_s, char.to_s, 0}
+      selects << {Dict::Item.new(char.to_s, char.to_s), 0}
       weights << idx + 1.0
     end
 
     total = dicts.size + 1
 
     input.each_with_index do |char, idx|
-      choices = {} of Int32 => Token
+      choices = {} of Int32 => Tuple(Dict::Item, Int32)
 
       dicts.each_with_index do |dict, jdx|
         dict.scan(input, idx).each do |item|
-          choices[item.key.size] = {item.key, item.val, jdx + 1}
+          choices[item.key.size] = {item, jdx + 1}
         end
       end
 
       choices.each do |size, token|
-        next if token[1].empty?
+        next if token[0].val.empty?
 
-        acc = token[2] / total
+        acc = token[1] / total
         jump = idx + size
         weight = weights[idx] + (size + acc) ** (1 + acc)
 
@@ -44,9 +44,13 @@ module Chivi::Core
     idx = selects.size - 1
 
     while idx > 0
-      cur = selects[idx]
-      res << {cur[0], cur[1].split("/").first, cur[2]} # remove multi values
-      idx -= cur[0].size
+      item, dic = selects[idx]
+
+      val = item.val
+      val = val.split("/").first unless val == "/"
+
+      res << {item.key, val, dic}
+      idx -= item.key.size
     end
 
     res
@@ -68,6 +72,10 @@ module Chivi::Core
       end
 
       res << {"", " ", 0} if should_add_space && space_before?(key)
+
+      if val == ""
+        pp token
+      end
 
       if should_apply_cap && val[0].alphanumeric?
         cap = val[0].upcase + val[1..]
@@ -127,7 +135,8 @@ module Chivi::Core
     case key[0]
     when '”', '’', '⟩', ')', ']',
          '}', ',', '.', ':', ';',
-         '!', '?', '%', ' ', '…'
+         '!', '?', '%', ' ', '_',
+         '…', '/', '\\'
       return false
     else
       return true
@@ -136,7 +145,7 @@ module Chivi::Core
 
   private def space_after?(key : String)
     case key[-1]
-    when '“', '‘', '⟨', '(', '[', '{', ' '
+    when '“', '‘', '⟨', '(', '[', '{', ' ', '_', '/', '\\'
       return false
     else
       return true

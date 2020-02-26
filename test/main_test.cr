@@ -23,3 +23,5 @@ Chivi::Util.split_lines(text).each_with_index do |line, idx|
     puts Chivi.render_tokens Chivi.convert(dicts, line)
   end
 end
+
+puts Chivi.translate(dicts, "[综恐]这什么鬼东西！／what_the_fuck_!--落漠")

@@ -2,7 +2,6 @@ require "./chivi/*"
 
 module Chivi
   extend self
-  VERSION = "0.2.0"
 
   alias DictList = Array(Dict)
 
