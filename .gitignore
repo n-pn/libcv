@@ -5,4 +5,5 @@
 *.dwarf
 /shard.lock
 *.txt
-/.dicts
+/.book
+/.temp

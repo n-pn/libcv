@@ -5,7 +5,7 @@ alias Counter = Hash(String, Int32)
 count_books = Counter.new { |h, k| h[k] = 0 }
 count_words = Counter.new { |h, k| h[k] = 0 }
 
-files = Dir.glob(".temp/unique/selected/*.json")
+files = Dir.glob(".temp/counted/*.json")
 files.each_with_index do |file, idx|
   puts "- [#{idx + 1}/#{files.size}] [#{file}]".colorize(:yellow)
 
@@ -16,5 +16,5 @@ files.each_with_index do |file, idx|
   end
 end
 
-File.write ".init/count_books.json", count_books.to_pretty_json
-File.write ".init/count_words.json", count_words.to_pretty_json
+File.write ".init/counters/books.json", count_books.to_pretty_json
+File.write ".init/counters/words.json", count_words.to_pretty_json

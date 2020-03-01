@@ -15,7 +15,7 @@ def file_too_old(file : String)
   Time.local - mtime > 1.days
 end
 
-def read_zip(zip_file : String = "tasks/init/cedict.zip") : String
+def read_zip(zip_file : String = ".init/cedict.zip") : String
   print "- fetching latest CC_CEDICT file from internet... ".colorize(:blue)
 
   if file_too_old(zip_file)
@@ -47,13 +47,13 @@ def cleanup_defn(defn, simp) : String
     .join("; ")
 end
 
-def load_input(inp_file : String = "tasks/init/cedict.txt")
+def load_input(inp_file : String = ".init/cedict.txt")
   print "- Load input from #{inp_file.colorize(:yellow)}"
 
   if !file_too_old(inp_file)
     output = File.read_lines(inp_file).map(&.split("|"))
   else
-    input = read_zip("tasks/init/cedict.zip")
+    input = read_zip(".init/cedict.zip")
 
     print " parsing...".colorize(:blue)
     output = [] of Array(String)
@@ -123,7 +123,7 @@ def export_pinyins(input, hanzidb)
   end
 
   output = Clavis.new("data/translit/binh_am.dic")
-  output.load!("tasks/init/pinyin.txt")
+  output.load!(".init/pinyin.txt")
 
   counter.each do |char, count|
     best = count.to_a.sort_by { |pinyin, value| -value }.first(3).map(&.first)
@@ -137,7 +137,7 @@ end
 def export_tradsim(input, hanzidb)
   puts "\n[Export tradsim]".colorize(:cyan)
 
-  tswords = Clavis.new("tasks/temp/tswords.txt")
+  tswords = Clavis.new(".temp/tswords.txt")
   counter = Hash(String, Counter).new { |h, k| h[k] = Counter.new(0) }
 
   input.each do |rec|
@@ -186,11 +186,11 @@ def extract_ondicts(cedict, tradsim)
   ondicts = Set(String).new
 
   ondicts.concat cedict.keys.reject { |x| tradsim.includes?(x) }
-  ondicts.concat Clavis.load!("tasks/init/lacviet.txt").keys
-  ondicts.concat Clavis.load!("tasks/init/hanviet/checked/words.txt").keys
-  ondicts.concat Clavis.load!("tasks/init/hanviet/trichdan/words.txt").keys
+  ondicts.concat Clavis.load!(".init/lacviet.txt").keys
+  ondicts.concat Clavis.load!(".init/hanviet/checked/words.txt").keys
+  ondicts.concat Clavis.load!(".init/hanviet/trichdan/words.txt").keys
 
-  out_file = "tasks/temp/ondicts.txt"
+  out_file = ".temp/ondicts.txt"
   File.write out_file, ondicts.to_a.join("\n")
   puts "- saving [#{out_file.colorize(:green)}]... done, entries: #{ondicts.size.colorize(:green)}"
 end
@@ -205,15 +205,15 @@ end
 def export_hanviet(tradsimp, pinyins, hanzidb)
   puts "\n[Export hanviet]".colorize(:cyan)
 
-  history_file = "tasks/init/hanviet/localqt.log"
+  history_file = ".init/hanviet/localqt.log"
   history = Set.new(File.read_lines(history_file)[1..].map(&.split("\t", 2)[0]))
 
-  localqt = Clavis.load!("tasks/init/hanviet/localqt.txt")
+  localqt = Clavis.load!(".init/hanviet/localqt.txt")
 
   extra_files = {
-    "tasks/init/hanviet/trichdan/chars.txt",
-    "tasks/init/hanviet/checked/chars.txt",
-    "tasks/init/hanviet/checked/words.txt",
+    ".init/hanviet/trichdan/chars.txt",
+    ".init/hanviet/checked/chars.txt",
+    ".init/hanviet/checked/words.txt",
   }
 
   extra_files.each do |file|
@@ -225,7 +225,7 @@ def export_hanviet(tradsimp, pinyins, hanzidb)
   puts "\n- Split trad/simp".colorize(:blue)
 
   out_hanviet = Clavis.new("data/translit/hanviet.dic")
-  out_hantrad = Clavis.new("tasks/temp/hantrad.txt")
+  out_hantrad = Clavis.new(".temp/hantrad.txt")
 
   localqt.data.each do |key, val|
     if is_simp?(tradsimp, key)
@@ -273,12 +273,12 @@ def export_hanviet(tradsimp, pinyins, hanzidb)
   puts "\n- Fill missing hanviet from vietphrase".colorize(:blue)
 
   dict_files = {
-    "tasks/init/localqt/vietphrase.txt",
-    "tasks/init/localqt/names1.txt",
-    "tasks/init/localqt/names2.txt",
+    ".init/localqt/vietphrase.txt",
+    ".init/localqt/names1.txt",
+    ".init/localqt/names2.txt",
 
-    "tasks/init/extraqt/words.txt",
-    "tasks/init/extraqt/names.txt",
+    ".init/extraqt/words.txt",
+    ".init/extraqt/names.txt",
   }
   recovered = 0
 
@@ -336,13 +336,13 @@ def export_hanviet(tradsimp, pinyins, hanzidb)
   out_hanviet.save!(keep: 4, sort: true)
   out_hantrad.save!(keep: 4, sort: true)
 
-  out_file = "tasks/temp/hanmiss.txt"
+  out_file = ".temp/hanmiss.txt"
   File.write out_file, missing.map { |x| "#{x}=[#{pinyins.get(x)}]" }.join("\n")
   puts "- saving [#{out_file.colorize(:green)}]... done, entries: #{missing.size.colorize(:green)}"
 end
 
-input = load_input("tasks/init/cedict.txt")
-hanzidb = Clavis.load!("tasks/init/hanzidb.txt")
+input = load_input(".init/cedict.txt")
+hanzidb = Clavis.load!(".init/hanzidb.txt")
 
 cedict = export_cedict(input)
 pinyins = export_pinyins(input, hanzidb)

@@ -11,7 +11,7 @@ def cleanup(val)
     .sub("}‖", "} ")
 end
 
-input = File.read_lines("tasks/init/lacviet.txt")
+input = File.read_lines(".init/lacviet.txt")
 output = String::Builder.new
 
 input.each do |line|

@@ -12,7 +12,7 @@ class Analyze
   end
 
   def initialize
-    @entries = File.read_lines(".init/existed.txt")
+    @entries = File.read_lines("tasks/init/defined.txt")
     @counter = Array(Int32).new(@entries.size, 0)
     @trie = Node.new
 
@@ -62,17 +62,24 @@ end
 
 analyzer = Analyze.new
 
-books = Dir.children(".book/chtexts")
-books.each_with_index do |book, idx|
-  puts "-- [#{idx + 1}/#{books.size}] {#{book}}".colorize(:blue)
+files = Dir.glob("../vault/book-init/book_infos/zhwenpg/*.json")
+files.each_with_index do |file, idx|
+  book = JSON.parse File.read(file)
+  label = "#{book["title"].as_s}--#{book["author"].as_s}"
 
-  out_file = ".temp/unique/selected/#{book}.json"
+  puts "- [#{idx + 1}/#{files.size}] {#{label}}".colorize(:blue)
+
+  out_file = ".temp/counted/#{label}.json"
   next if File.exists?(out_file)
 
-  files = Dir[".book/chtexts/#{book}/*.txt"]
+  book_id = File.basename(file, ".json")
+  chaps = Dir["../vault/book-init/chap_texts/zhwenpg/#{book_id}/*.txt"]
 
-  files.each do |file|
-    File.read_lines(file).each { |line| analyzer.add(line) }
+  next if chaps.size == 0
+
+  chaps.each_with_index do |chap, ii|
+    # puts "-- [#{ii + 1}/#{chaps.size}] #{chap}".colorize(:yellow)
+    File.read_lines(chap).each { |line| analyzer.add(line) }
   end
 
   output = analyzer.report(1)
