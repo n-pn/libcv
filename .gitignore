@@ -5,5 +5,3 @@
 *.dwarf
 /shard.lock
 *.txt
-/.book
-/.temp

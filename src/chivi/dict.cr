@@ -2,7 +2,7 @@ require "colorize"
 require "benchmark"
 
 class Chivi::Dict
-  SEP = "="
+  SEP = "|"
 
   class Item
     getter key : String
@@ -41,7 +41,8 @@ class Chivi::Dict
     dict.load!(file)
   end
 
-  def initialize(@file : String)
+  def initialize(@file : String, preload = true)
+    load!(@file) if File.exists?(file) && preload
   end
 
   def load!(file : String = @file)
