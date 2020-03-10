@@ -19,10 +19,10 @@ combine.set("贾文和", "Giả Văn Hoà")
 
 Chivi::Util.split_lines(text).each_with_index do |line, idx|
   if idx == 0
-    puts Chivi::Core.convert_title(dicts, line).map(&.[1]).join
+    puts Chivi::Core.convert_title(dicts, line).map(&.val).join
   else
-    puts Chivi::Core.convert(dicts, line).map(&.[1]).join
+    puts Chivi::Core.convert_plain(dicts, line).map(&.val).join
   end
 end
 
-puts Chivi.translate(dicts, "[综恐]这什么鬼东西！／what_the_fuck_!--落漠")
+puts Chivi::Core.convert_plain(dicts, "[综恐]这什么鬼东西！／what_the_fuck_!--落漠").map(&.val).join
