@@ -3,52 +3,41 @@ require "./chivi/*"
 module Chivi
   extend self
 
-  alias DictList = Array(Dict)
+  @@standard = Repo.new(".dic")
+  @@translit = Repo.new(".dic/translit")
+  @@glossary = Repo.new(".dic/glossary")
+  @@specific = Repo.new(".dic/specific")
 
-  def translate(dicts : DictList, input : String, generic = false)
-    tokens = convert(dicts, input, cap_first: generic, ignore_de: generic)
-    render_tokens(tokens)
+  def hanviet(input : String, cap_first = false)
+    translate(@@translit["hanviet"], input, cap_first, ignore_de: false)
   end
 
-  def render_tokens(tokens : Array(Core::Token))
-    tokens.map(&.[1]).join
+  def combine(input : String, mode : Symbol = :mixed)
+    dicts = @@standard["generic"]
+    dicts.concat @@standard["combine"]
+
+    convert(dicts, input, mode).map { |line| line.map(&.[1]).join }.join("\n")
   end
 
-  def convert(dicts : DictList, input : String, cap_first = true, ignore_de = true)
-    tokens = tokenize(dicts, input)
-    Core.apply_grammar(tokens, cap_first, ignore_de)
+  def translate(dicts : Array(Dict), input : String, cap_first = true, ignore_de = true)
+    Core.convert(dicts, input, cap_first: cap_first, ignore_de: ignore_de)
+      .map(&.[1]).join
   end
 
-  def convert_title(dicts : DictList, input : String)
-    if match = Util.split_head(input)
-      head_text, head_trash, zh_index, vi_index, tail_trash, tail_text = match
+  def convert(dicts : Array(Dict), input : String, mode : Symbol = :mixed)
+    convert(dicts, Util.split_lines(input), mode)
+  end
 
-      output = Core::TokenList.new
-
-      if !head_text.empty?
-        output.concat convert(dicts, head_text)
-        output << {head_trash, " - ", 0}
-      elsif !head_trash.empty?
-        output << {head_trash, "", 0}
-      end
-
-      output << {zh_index, vi_index, 0}
-
-      if !tail_text.empty?
-        output << {tail_trash, ": ", 0}
-        output.concat convert_title(dicts, tail_text) # incase volume title is mixed with chapter title
-      elsif !tail_trash.empty?
-        output << {tail_trash, "", 0}
-      end
-
+  def convert(dicts : Array(Dict), lines : Array(String), mode : Symbol = :mixed)
+    case mode
+    when :title
+      lines.map { |line| Core.convert_title(dicts, line) }
+    when :plain
+      lines.map { |line| Core.convert_title(dicts, line) }
+    else # :mixed
+      output = [Core.convert_title(dicts, lines.first)]
+      lines[1..].each { |line| output << Core.convert(dicts, line) }
       output
-    else
-      convert(dicts, input)
     end
-  end
-
-  def tokenize(dicts : DictList, input : String)
-    chars = Util.normalize(input)
-    Core.tokenize(dicts, chars)
   end
 end

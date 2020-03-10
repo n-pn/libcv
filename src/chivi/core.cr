@@ -1,12 +1,53 @@
 require "./dict"
+require "./util"
 
 module Chivi::Core
   extend self
 
+  alias Dicts = Array(Dict)
+  alias Chars = Array(Char)
   alias Token = Tuple(String, String, Int32) # {key, val, dic}
-  alias TokenList = Array(Token)
+  alias Tokens = Array(Token)
 
-  def tokenize(dicts : Array(Dict), input : Array(Char)) : TokenList
+  def convert(dicts : Dicts, input : String, cap_first = true, ignore_de = true)
+    tokens = tokenize(dicts, input)
+    apply_grammar(tokens, cap_first, ignore_de)
+  end
+
+  def convert_title(dicts : Dicts, input : String)
+    if match = Util.split_head(input)
+      head_text, head_trash, zh_index, vi_index, tail_trash, tail_text = match
+
+      output = Tokens.new
+
+      if !head_text.empty?
+        output.concat convert(dicts, head_text)
+        output << {head_trash, " - ", 0}
+      elsif !head_trash.empty?
+        output << {head_trash, "", 0}
+      end
+
+      output << {zh_index, vi_index, 0}
+
+      if !tail_text.empty?
+        output << {tail_trash, ": ", 0}
+        output.concat convert_title(dicts, tail_text) # incase volume title is mixed with chapter title
+      elsif !tail_trash.empty?
+        output << {tail_trash, "", 0}
+      end
+
+      output
+    else
+      convert(dicts, input)
+    end
+  end
+
+  def tokenize(dicts : Dicts, input : String)
+    chars = Util.normalize(input)
+    tokenize(dicts, chars)
+  end
+
+  def tokenize(dicts : Dicts, input : Chars) : Tokens
     selects = [{Dict::Item.new("", ""), 0}]
     weights = [0.0]
 
@@ -40,7 +81,7 @@ module Chivi::Core
       end
     end
 
-    res = TokenList.new
+    res = Tokens.new
     idx = selects.size - 1
 
     while idx > 0
@@ -56,8 +97,8 @@ module Chivi::Core
     res
   end
 
-  def apply_grammar(tokens : TokenList, cap_first = true, ignore_de = true) : TokenList
-    res = TokenList.new
+  def apply_grammar(tokens : Tokens, cap_first = true, ignore_de = true) : Tokens
+    res = Tokens.new
 
     should_apply_cap = cap_first
     should_add_space = false
@@ -92,8 +133,8 @@ module Chivi::Core
     res
   end
 
-  private def combine_similar(tokens : TokenList) : TokenList
-    res = TokenList.new
+  private def combine_similar(tokens : Tokens) : Tokens
+    res = Tokens.new
     idx = tokens.size - 1
 
     while idx >= 0

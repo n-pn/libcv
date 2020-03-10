@@ -21,6 +21,8 @@ class Chivi::Dict
     end
   end
 
+  alias Items = Array(Item)
+
   class Node
     property item : Item?
     property trie : Hash(Char, Node)
@@ -29,16 +31,16 @@ class Chivi::Dict
     end
   end
 
-  getter list : Array(Item)
+  getter list : Items
   getter size : Int32
 
-  @list = Array(Item).new
+  @list = Items.new
   @trie = Node.new
   @size = 0
 
   def self.load!(file : String)
-    dict = new(file)
-    dict.load!(file)
+    raise "File [#{file.colorize(:red)}] not found!" unless File.exists?(file)
+    new(file, preload: true)
   end
 
   def initialize(@file : String, preload = true)
@@ -102,7 +104,7 @@ class Chivi::Dict
     node.item
   end
 
-  def scan(chars : Array(Char), offset : Int32 = 0) : Array(Item)
+  def scan(chars : Array(Char), offset : Int32 = 0) : Items
     output = [] of Item
 
     node = @trie
