@@ -1,4 +1,4 @@
-require "../src/main"
+require "../src/core"
 
 text = "第十三集 龙章凤仪 第一章 屠龙之术
 贾文和一个玩阴谋的，突然间客串了一把热血刺客，效果立竿见影。一万个道理都未必能说服的廖群玉，被一把错刀给说得心服口服，当即赶到宋国馆邸，通过官方渠道传讯临安，以自己的身家性命作保，顺利说服贾师宪，由其举荐宝钞局主事，工部员外郎程宗扬为唐国正使，通问昭南事宜。
@@ -11,12 +11,18 @@ text = "第十三集 龙章凤仪 第一章 屠龙之术
 
 程宗扬打趣道：“没跟你商量，就抢了你的正使职位，抱歉抱歉。”"
 
-engine = Chivi::Main.new(".dic")
+generic = Chivi::Dict.load! ".dic/shared/generic.dic"
+combine = Chivi::Dict.load! ".dic/shared/combine.dic"
 
-puts engine.translate(text, :mixed).join("\n")
+dicts = [generic, combine]
+combine.set("贾文和", "Giả Văn Hoà")
 
-line = "程宗扬打趣道：“没跟你商量，就抢了你的正使职位，抱歉抱歉。"
-puts line
-puts engine.hanviet(line)
-puts engine.binh_am(line)
-puts engine.tradsim(line)
+Chivi::Util.split_lines(text).each_with_index do |line, idx|
+  if idx == 0
+    puts Chivi::Core.cv_title(dicts, line).map(&.val).join
+  else
+    puts Chivi::Core.cv_plain(dicts, line).map(&.val).join
+  end
+end
+
+puts Chivi::Core.cv_plain(dicts, "[综恐]这什么鬼东西！／what_the_fuck_!--落漠").map(&.val).join

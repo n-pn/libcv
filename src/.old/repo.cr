@@ -1,18 +1,18 @@
 require "colorize"
 require "benchmark"
 
-require "./dict"
+require "../dict"
 
-class Chivi::Repo
-  alias DicList = Hash(String, Dict)
-  alias FixList = Hash(String, DicList)
+class Chivi::DictRepo
+  alias DictList = Hash(String, Dict)
+  alias UserList = Hash(String, DictList)
 
-  property dicts : DicList
-  property fixes : FixList
+  property dicts : DictList
+  property fixes : UserList
 
   def initialize(@dir : String, preload = false)
-    @dicts = DicList.new
-    @fixes = FixList.new { |h, k| h[k] = DicList.new }
+    @dicts = DictList.new
+    @fixes = UserList.new { |h, k| h[k] = DictList.new }
 
     load_dir!(lazy: false) if preload
   end
@@ -52,7 +52,7 @@ class Chivi::Repo
     count
   end
 
-  def [](name : String, user = "root") : Array(Dict)
+  def [](name : String, user = "admin") : Array(Dict)
     [get_dic(name), get_fix(name, user)]
   end
 
@@ -60,7 +60,7 @@ class Chivi::Repo
     @dicts[name] ||= load_dic(name)
   end
 
-  def get_fix(name : String, user = "root") : Dict
+  def get_fix(name : String, user = "admin") : Dict
     @fixes[name][user] ||= load_fix(name, user)
   end
 

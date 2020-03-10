@@ -1,4 +1,37 @@
+require "json"
+
 module Chivi::Core
+  class Token
+    include JSON::Serializable
+
+    property key : String
+    property val : String
+    property dic : Int32 = 0
+
+    def initialize(chr : Char)
+      @key = chr.to_s
+      @val = chr.to_s
+      @dic = 0
+    end
+
+    def initialize(@key, @val, @dic)
+    end
+
+    def capitalize!
+      @val = Util.capitalize(@val)
+      self
+    end
+
+    def compact!
+      @val = @val.split("/").first unless @val == "/"
+      self
+    end
+
+    def to_s(io : IO)
+      io << "[" << @key << ":" << @val << ":" << @dic << "]"
+    end
+  end
+
   def tokenize(dicts : Dicts, input : Chars) : Tokens
     selects = [Token.new('.')]
     weights = [0.0]
