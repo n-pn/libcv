@@ -3,8 +3,8 @@ require "./util/*"
 module Chivi::Util
   extend self
 
-  # capitalize all
-  def titleize(input : String)
+  # capitalize all words
+  def titlecase(input : String)
     input.split(" ").map { |x| capitalize(x) }.join(" ")
   end
 
