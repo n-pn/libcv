@@ -10,6 +10,7 @@ module Chivi::Util
 
   # don't downcase extra characters
   def capitalize(str : String) : String
+    return str if str.empty?
     str[0].upcase + str[1..]
   end
 
