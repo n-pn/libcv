@@ -13,12 +13,14 @@ module Chivi::Core
   end
 
   private def can_apply_cap?(val : String)
+    return false if val.empty?
     val[0].alphanumeric?
   end
 
-  private def cap_after?(key : String)
-    case key[-1]
-    when '“', '‘', '⟨', '[', ']', '{', '.', ':', '!', '?'
+  private def cap_after?(val : String)
+    return false if val.empty?
+    case val[-1]
+    when '“', '‘', '⟨', '[', '{', '.', ':', '!', '?'
       return true
     else
       return false
