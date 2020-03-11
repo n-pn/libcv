@@ -17,11 +17,23 @@ module Chivi::Core
       jdx = idx + 1
 
       if token.dic == 0
-        # combine tokens when they are similar
-        while jdx < input.size && similar?(token, input[jdx])
-          token.key += input[jdx].key
-          token.val += input[jdx].val
-          jdx += 1
+        if latin?(token.key)
+          token.dic = 1
+          # combine alphanumeric or http
+          while pending = input[jdx]?
+            break unless pending.dic == 0 && latin?(pending.key)
+            token.key += pending.key
+            token.val += pending.val
+            jdx += 1
+          end
+        else
+          # combine similar chars
+          while pending = input[jdx]?
+            break unless pending.dic == 0 && pending.key[0] == token.key[0]
+            token.key += pending.key
+            token.val += pending.val
+            jdx += 1
+          end
         end
       elsif token.key == "的"
         token.val = ""
@@ -35,6 +47,10 @@ module Chivi::Core
     # puts input, output
 
     output
+  end
+
+  private def latin?(key : String)
+    key =~ /[\w-\/%]/
   end
 
   # TODO: handle weblinks?

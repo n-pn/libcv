@@ -3,26 +3,26 @@ module Chivi::Core
     add_space = false
 
     input.each_with_object(Tokens.new) do |token, res|
-      if add_space && space_before?(token.val)
-        res << Token.new("", " ", 0)
-      end
+      # if add_space && space_before?(token.val)
+      # end
 
+      res << Token.new("", " ", 0) if space_before?(token) && add_space
       res << token.compact!
       add_space = space_after?(token.val)
     end
   end
 
-  private def space_before?(val : String)
-    return false if val.empty?
+  private def space_before?(token : Token)
+    return false if token.val.empty?
 
-    case val[0]
+    case token.val[0]
     when '”', '’', '⟩', ')', ']',
          '}', ',', '.', ':', ';',
          '!', '?', '%', ' ', '_',
          '…', '/', '\\'
       return false
     else
-      return true
+      return token.dic > 0
     end
   end
 

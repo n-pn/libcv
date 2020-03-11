@@ -28,3 +28,11 @@ puts line
 puts engine.hanviet(line)
 puts engine.binh_am(line)
 puts engine.tradsim(line)
+
+test1 = "坚定不移沿着中国特色社会主义道路前进  为全面建成小康社会而奋斗"
+test2 = "MUV  LUV AL 红龙"
+test3 = "异闻录  每晚一个离奇的故事"
+
+puts engine.hanviet(test1)
+puts engine.hanviet(test2)
+puts engine.hanviet(test3)
