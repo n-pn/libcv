@@ -4,6 +4,7 @@ require "benchmark"
 class Chivi::Dict
   SEP = "|"
 
+  # Child
   class Item
     getter key : String
     property val : String
@@ -21,40 +22,77 @@ class Chivi::Dict
     end
   end
 
-  alias Items = Array(Item)
-
   class Node
-    property item : Item?
-    property trie : Hash(Char, Node)
+    alias Trie = Hash(Char, Node)
 
-    def initialize(@item : Item? = nil, @trie = Hash(Char, Node).new)
+    property item : Item?
+    property trie : Trie
+
+    def initialize(@item : Item? = nil)
+      @trie = Trie.new
     end
   end
 
-  getter list : Items
-  getter size : Int32
+  # Class
 
-  @list = Items.new
-  @trie = Node.new
-  @size = 0
+  @@dicts = {} of String => Dict
 
-  def self.load!(file : String)
-    raise "File [#{file.colorize(:red)}] not found!" unless File.exists?(file)
-    new(file, preload: true)
+  def self.load(file : String, reload : Bool = false) : Dict
+    if dict = @@dicts[file]?
+      return dict unless reload
+    end
+
+    @@dicts[file] = new(file, preload: true)
   end
+
+  def self.load!(file : String, reload = false)
+    raise "File [#{file.colorize(:red)}] not found!" unless File.exists?(file)
+    load(file, reload: reload)
+  end
+
+  EPOCH = Time.utc(2020, 1, 1)
+
+  def self.mtime(time = Time.utc) : Int32
+    (time - EPOCH).total_minutes.to_i
+  end
+
+  # Instance
+
+  @trie = Node.new
+  @mtimes = Hash(String, Int32).new
+
+  getter file : String
+  getter size : Int32 = 0
+  getter mtime : Int32 = 0
 
   def initialize(@file : String, preload = true)
-    load!(@file) if File.exists?(file) && preload
+    if File.exists?(@file)
+      load!(@file) if preload
+      mtime = File.info(@file).modification_time
+      @mtime = Dict.mtime(mtime)
+    end
   end
 
-  def load!(file : String = @file)
+  def load!(file : String = @file) : Dict
     count = 0
 
     realtime = Benchmark.realtime do
       lines = File.read_lines(file)
       count = lines.size
 
-      lines.each { |line| put(Item.parse(line)) }
+      lines.each do |line|
+        cols = line.split(SEP)
+        key = cols[0]
+        val = cols[1]? || ""
+
+        put(key, val)
+
+        if mtime = cols[2]?
+          mtime = mtime.to_i
+          @mtime = mtime
+          @mtimes[key] = mtime
+        end
+      end
     end
 
     elapse = realtime.total_milliseconds
@@ -65,7 +103,12 @@ class Chivi::Dict
 
   def set(key : String, val : String) : String
     item = Item.new(key, val)
-    File.open(@file, "a") { |f| f.puts item }
+    @mtimes[key] = Dict.mtime
+
+    File.open(@file, "a") do |f|
+      f << key << SEP << val << SEP << mtime << "\n"
+    end
+
     put(item)
   end
 
@@ -73,38 +116,41 @@ class Chivi::Dict
     set(key, "")
   end
 
+  def put(key : String, val : String)
+    put(Item.new(key, val))
+  end
+
   def put(item : Item) : String
     @size += 1 unless item.val.empty?
-    old = ""
+    old_val = ""
 
     node = item.key.chars.reduce(@trie) do |node, char|
       node.trie[char] ||= Node.new
     end
 
-    if prev = node.item
-      old = prev.val
-      prev.val = item.val
-      @size -= 1 unless old.empty?
+    if old = node.item
+      old_val = old.val
+      old.val = item.val
+      @size -= 1 unless old_val.empty?
     else
-      @list << item
       node.item = item
     end
 
-    old
+    old_val
   end
 
   def find(key : String) : Item?
     node = @trie
 
     key.chars.each do |char|
-      node = node.trie[char]
+      node = node.trie[char]?
       return nil unless node
     end
 
     node.item
   end
 
-  def scan(chars : Array(Char), offset : Int32 = 0) : Items
+  def scan(chars : Array(Char), offset : Int32 = 0)
     output = [] of Item
 
     node = @trie
@@ -121,10 +167,31 @@ class Chivi::Dict
     output
   end
 
-  def save!(file : String = @file, sort : Bool = false)
-    list = sort ? @list.sort_by { |x| {-x.key.size, x.key} } : @list
+  include Enumerable(Item)
 
-    File.open(file, "w") { |f| list.each { |i| f.puts i } }
+  def each
+    queue = [@trie]
+    while node = queue.pop?
+      node.trie.each_value do |node|
+        queue << node
+        if item = node.item
+          yield item
+        end
+      end
+    end
+  end
+
+  def save!(file : String = @file)
+    File.open(file, "w") do |f|
+      each do |item|
+        f << item.key << SEP << item.val
+        if mtime = @mtimes[item.key]?
+          f << SEP << mtime
+        end
+        f << "\n"
+      end
+    end
+
     puts "- Save to [#{file.colorize(:yellow)}], items: #{@size.colorize(:yellow)}"
   end
 end

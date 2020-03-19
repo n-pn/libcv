@@ -6,23 +6,23 @@ module Chivi::Core
       # if add_space && space_before?(token.val)
       # end
 
-      res << Token.new("", " ", 0) if space_before?(token) && add_space
+      res << Token.new("", " ", 0) if space_before?(token.val) && add_space
       res << token.compact!
       add_space = space_after?(token.val)
     end
   end
 
-  private def space_before?(token : Token)
-    return false if token.val.empty?
+  private def space_before?(val : String)
+    return false if val.empty?
 
-    case token.val[0]
+    case val[0]
     when '”', '’', '⟩', ')', ']',
          '}', ',', '.', ':', ';',
          '!', '?', '%', ' ', '_',
          '…', '/', '\\'
       return false
     else
-      return token.dic > 0
+      return true
     end
   end
 

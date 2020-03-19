@@ -1,11 +1,11 @@
-require "../src/chivi"
+require "../src/dict"
 
 test = Chivi::Dict.new "test/test.txt"
 
 print "\nset abc to abc: ", test.set("abc", "abc")
 
-print "\nput a to a: ", test.put Chivi::Dict::Item.new("a", "a")
-print "\nput b to b: ", test.put Chivi::Dict::Item.new("b", "b")
+print "\nput a to a: ", test.put("a", "a")
+print "\nput b to b: ", test.put("b", "b")
 
 print "\nset a to c: ", test.set("a", "c")
 
@@ -19,6 +19,6 @@ print "\ndel b: ", test.del "b"
 
 puts "\n size: #{test.size}"
 
-puts test.list.join("\n")
+pp test.to_a
 
-test.save! sort: true
+# test.save!

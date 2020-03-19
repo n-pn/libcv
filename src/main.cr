@@ -26,7 +26,7 @@ class Chivi::Main
   end
 
   def to_text(tokens : Array(Core::Token))
-    tokens.map(&.val).join
+    tokens.map(&.val.split("/").first).join
   end
 
   def translate(input : String, mode : Symbol = :mixed, book : String? = nil)
