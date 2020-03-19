@@ -6,34 +6,37 @@ module Chivi::Core
       # if add_space && space_before?(token.val)
       # end
 
-      res << Token.new("", " ", 0) if space_before?(token.val) && add_space
+      if add_space && space_before?(token.val[0]?)
+        res << Token.new("", " ", 0)
+      end
+
       res << token.compact!
-      add_space = space_after?(token.val)
+      add_space = token.dic > 0 || space_after?(token.val[-1]?)
     end
   end
 
-  private def space_before?(val : String)
-    return false if val.empty?
-
-    case val[0]
-    when '”', '’', '⟩', ')', ']',
+  private def space_before?(char : Char?)
+    case char
+    when nil, '”', '’', '⟩', ')', ']',
          '}', ',', '.', ':', ';',
          '!', '?', '%', ' ', '_',
-         '…', '/', '\\'
+         '…', '/', '\\', '~'
       return false
     else
       return true
     end
   end
 
-  private def space_after?(val : String)
-    return true if val.empty?
-
-    case val[-1]
-    when '“', '‘', '⟨', '(', '[', '{', ' ', '_', '/', '\\'
-      return false
-    else
+  private def space_after?(char : Char?)
+    case char
+    when nil, '”', '’', '⟩', ')', ']',
+         '}', ',', '.', ':', ';',
+         '!', '?', '…', '~'
       return true
+      # when '“', '‘', '⟨', '(', '[', '{', ' ', '_', '/', '\\'
+      # return false
+    else
+      return false
     end
   end
 end

@@ -16,28 +16,18 @@ module Chivi::Core
       token = input[idx]
       jdx = idx + 1
 
-      if token.dic == 0
-        if latin?(token.key)
-          token.dic = 1
-          # combine alphanumeric or http
-          while pending = input[jdx]?
-            break unless pending.dic == 0 && latin?(pending.key)
-            token.key += pending.key
-            token.val += pending.val
-            jdx += 1
-          end
-        else
-          # combine similar chars
-          while pending = input[jdx]?
-            break unless pending.dic == 0 && pending.key[0] == token.key[0]
-            token.key += pending.key
-            token.val += pending.val
-            jdx += 1
-          end
-        end
-      elsif token.key == "的"
+      if token.key == "的"
         token.val = ""
         token.dic = 0
+        # elsif token.dic == 0 && latin?(token.key)
+        #   token.dic = 1
+        #   # combine alphanumeric or http
+        #   while pending = input[jdx]?
+        #     break unless pending.dic == 0 && latin?(pending.key)
+        #     token.key += pending.key
+        #     token.val += pending.val
+        #     jdx += 1
+        #   end
       end
 
       output << token
@@ -50,7 +40,7 @@ module Chivi::Core
   end
 
   private def latin?(key : String)
-    key =~ /[\w-\/%]/
+    key =~ /[\w-\/.?%]/
   end
 
   # TODO: handle weblinks?

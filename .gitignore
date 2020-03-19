@@ -5,4 +5,4 @@
 /.shards/
 *.dwarf
 /shard.lock
-/.dic/*
+/.dic/
