@@ -7,13 +7,13 @@ class Chivi::Repo
 
   def initialize(@root = ".dic")
     @dicts = {
+      "system" => DictMap.new,
       "common" => DictMap.new,
-      "shared" => DictMap.new,
       "unique" => DictMap.new,
     }
 
     @fixes = {
-      "shared" => UserMap.new { |h, k| h[k] = DictMap.new },
+      "common" => UserMap.new { |h, k| h[k] = DictMap.new },
       "unique" => UserMap.new { |h, k| h[k] = DictMap.new },
     }
   end
@@ -21,50 +21,50 @@ class Chivi::Repo
   alias Dicts = Array(Dict)
 
   def cc_cedict
-    @dicts["common"]["cc_cedict"] ||= load_dic(".", "cc_cedict")
+    @dicts["system"]["cc_cedict"] ||= load_dic(".", "cc_cedict")
   end
 
   def trungviet
-    @dicts["common"]["trungviet"] ||= load_dic(".", "trungviet")
+    @dicts["system"]["trungviet"] ||= load_dic(".", "trungviet")
   end
 
   def hanviet
-    @dicts["common"]["hanviet"] ||= load_dic(".", "hanviet")
+    @dicts["system"]["hanviet"] ||= load_dic(".", "hanviet")
   end
 
-  def binh_am
-    @dicts["common"]["binh_am"] ||= load_dic(".", "binh_am")
+  def pinyin
+    @dicts["system"]["pinyin"] ||= load_dic(".", "pinyin")
   end
 
   def tradsim
-    @dicts["common"]["tradsim"] ||= load_dic(".", "tradsim")
+    @dicts["system"]["tradsim"] ||= load_dic(".", "tradsim")
   end
 
   def generic
-    @dicts["shared"]["generic"] ||= load_dic("shared", "generic")
+    @dicts["common"]["generic"] ||= load_dic("common", "generic")
   end
 
   def generic(fix : String)
-    @fixes["shared"]["generic"][fix] ||= load_fix("shared", "generic", fix)
-    {generic, @fixes["shared"]["generic"][fix]}
+    @fixes["common"]["generic"][fix] ||= load_fix("common", "generic", fix)
+    {generic, @fixes["common"]["generic"][fix]}
   end
 
   def combine
-    @dicts["shared"]["combine"] ||= load_dic("shared", "combine")
+    @dicts["common"]["combine"] ||= load_dic("common", "combine")
   end
 
   def combine(fix : String)
-    @fixes["shared"]["combine"][fix] ||= load_fix("shared", "combine", fix)
-    {combine, @fixes["shared"]["combine"][fix]}
+    @fixes["common"]["combine"][fix] ||= load_fix("common", "combine", fix)
+    {combine, @fixes["common"]["combine"][fix]}
   end
 
   def suggest
-    @dicts["shared"]["suggest"] ||= load_dic("shared", "suggest")
+    @dicts["common"]["suggest"] ||= load_dic("common", "suggest")
   end
 
   def suggest(fix : String)
-    @fixes["shared"]["suggest"][fix] ||= load_fix("shared", "suggest", fix)
-    {suggest, @fixes["shared"]["suggest"][fix]}
+    @fixes["common"]["suggest"][fix] ||= load_fix("common", "suggest", fix)
+    {suggest, @fixes["common"]["suggest"][fix]}
   end
 
   def unique(name : String)

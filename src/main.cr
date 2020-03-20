@@ -6,29 +6,23 @@ class Chivi::Main
   end
 
   def hanviet(input : String)
-    chars = Util.normalize(input)
-    tokens = Core.cv_lit([@repo.hanviet], chars)
+    tokens = Core.cv_lit([@repo.hanviet], input)
     to_text(tokens)
   end
 
-  def binh_am(input : String)
-    chars = Util.normalize(input)
-    tokens = Core.cv_lit([@repo.binh_am], chars)
+  def pinyin(input : String)
+    tokens = Core.cv_lit([@repo.pinyin], input)
     to_text(tokens)
   end
 
   def tradsim(input : String)
     puts "TODO: punctuation!!!"
-
-    chars = input.chars
-    tokens = Core.cv_raw([@repo.tradsim], chars)
+    tokens = Core.cv_raw([@repo.tradsim], input)
     to_text(tokens)
   end
 
   def to_text(tokens : Array(Core::Token))
-    tokens.map { |x|
-      x.val == "/" ? x.val : x.val.split("/").first
-    }.join
+    tokens.map(&.val).join
   end
 
   def translate(input : String, mode : Symbol = :mixed, book : String? = nil)

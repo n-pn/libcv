@@ -22,11 +22,6 @@ module Chivi::Core
       self
     end
 
-    def compact!
-      @val = @val.split("/").first unless @val == "/"
-      self
-    end
-
     def to_s(io : IO)
       io << "[" << @key << ":" << @val << ":" << @dic << "]"
     end
@@ -48,7 +43,7 @@ module Chivi::Core
 
       dicts.each_with_index do |dict, jdx|
         dict.scan(input, idx).each do |item|
-          choices[item.key.size] = Token.new(item.key, item.val, jdx + 1)
+          choices[item.key.size] = Token.new(item.key, item.val.first, jdx + 1)
         end
       end
 

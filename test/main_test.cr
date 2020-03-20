@@ -22,16 +22,19 @@ puts engine.translate(text, :plain).join("\n")
 
 line = "程宗扬打趣道：“没跟你商量，就抢了你的正使职位，抱歉抱歉。”"
 puts line
+
 puts engine.hanviet(line)
-puts engine.binh_am(line)
+puts engine.pinyin(line)
 puts engine.tradsim(line)
 
 test1 = "坚定不移沿着中国特色社会主义道路前进  为全面建成小康社会而奋斗"
 test2 = "MUV  LUV AL 红龙"
 test3 = "异闻录  每晚一个离奇的故事"
-test4 = "红龙 M 红~~~龙 MUV  LUV AL 红龙 http://test.com/test?q=1"
+test4 = "红龙M红~~~龙 MUV  LUV AL 红龙 http://test.com/test?q=1"
 
 puts engine.hanviet(test1)
 puts engine.hanviet(test2)
 puts engine.hanviet(test3)
 puts engine.hanviet(test4)
+
+puts engine.translate(test4, :plain)

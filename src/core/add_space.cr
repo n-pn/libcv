@@ -10,33 +10,39 @@ module Chivi::Core
         res << Token.new("", " ", 0)
       end
 
-      res << token.compact!
+      res << token
       add_space = token.dic > 0 || space_after?(token.val[-1]?)
     end
   end
 
   private def space_before?(char : Char?)
+    return false if char.nil?
+
     case char
-    when nil, '”', '’', '⟩', ')', ']',
+    when '”', '’', '⟩', ')', ']',
          '}', ',', '.', ':', ';',
          '!', '?', '%', ' ', '_',
          '…', '/', '\\', '~'
-      return false
+      false
     else
-      return true
+      true
     end
   end
 
   private def space_after?(char : Char?)
+    # return true if char.nil?
+
     case char
-    when nil, '”', '’', '⟩', ')', ']',
-         '}', ',', '.', ':', ';',
-         '!', '?', '…', '~'
-      return true
-      # when '“', '‘', '⟨', '(', '[', '{', ' ', '_', '/', '\\'
-      # return false
+    # when '”', '’', '⟩', ')', ']',
+    #      '}', ',', '.', ':', ';',
+    #      '!', '?', '…', '~'
+    #   true
+    # else
+    # false
+    when '“', '‘', '⟨', '(', '[', '{', ' ', '_', '/', '\\'
+      false
     else
-      return false
+      true
     end
   end
 end

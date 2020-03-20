@@ -12,36 +12,25 @@ module Chivi::Core
 
   # do not add capitalize and spaces, suit for tradsimp conversion
   def cv_raw(dicts : Dicts, input : String)
-    chars = Util.normalize(input)
-    cv_raw(dicts, chars)
-  end
-
-  # :ditto:
-  def cv_raw(dicts : Dicts, chars : Chars)
-    tokenize(dicts, chars)
+    tokenize(dicts, input.chars)
   end
 
   # only add space, for transliteration like hanviet or pinyins
   def cv_lit(dicts : Dicts, input : String)
     chars = Util.normalize(input)
-    cv_lit(dicts, chars)
-  end
-
-  # :ditto:
-  def cv_lit(dicts : Dicts, chars : Chars)
-    add_space(tokenize(dicts, chars))
+    tokens = tokenize(dicts, chars)
+    tokens = group_similar(tokens)
+    add_space(tokens)
   end
 
   # apply spaces, caps and grammars, suit for vietphase translation
   def cv_plain(dicts : Dicts, input : String)
     chars = Util.normalize(input)
-    cv_plain(dicts, chars)
-  end
-
-  # :ditto:
-  def cv_plain(dicts : Dicts, chars : Chars)
-    tokens = fix_grammar(tokenize(dicts, chars))
-    add_space(capitalize(tokens))
+    tokens = tokenize(dicts, chars)
+    tokens = group_similar(tokens)
+    tokens = fix_grammar(tokens)
+    tokens = capitalize(tokens)
+    add_space(tokens)
   end
 
   # take extra care for chapter titles

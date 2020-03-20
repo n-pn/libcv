@@ -2,23 +2,23 @@ require "colorize"
 require "benchmark"
 
 class Chivi::Dict
-  SEP = "|"
+  SEP_0 = "ǁ"
+  SEP_1 = "¦"
 
   # Child
   class Item
     getter key : String
-    property val : String
+    property val : Array(String)
 
-    def self.parse(line : String)
-      cols = line.split(SEP, 2)
-      new(cols[0], cols[1]? || "")
+    def initialize(@key : String, @val : Array(String))
     end
 
-    def initialize(@key : String, @val : String)
+    def initialize(@key : String, val : String)
+      @val = val.split(SEP_1)
     end
 
     def to_s(io : IO)
-      io << @key << SEP << @val
+      io << @key << SEP_0 << @val.join(SEP_1)
     end
   end
 
@@ -41,7 +41,6 @@ class Chivi::Dict
     if dict = @@dicts[file]?
       return dict unless reload
     end
-
     @@dicts[file] = new(file, preload: true)
   end
 
@@ -68,8 +67,11 @@ class Chivi::Dict
   def initialize(@file : String, preload = true)
     if File.exists?(@file)
       load!(@file) if preload
-      mtime = File.info(@file).modification_time
-      @mtime = Dict.mtime(mtime)
+
+      if @mtime == 0
+        mtime = File.info(@file).modification_time
+        @mtime = Dict.mtime(mtime)
+      end
     end
   end
 
@@ -81,7 +83,7 @@ class Chivi::Dict
       count = lines.size
 
       lines.each do |line|
-        cols = line.split(SEP)
+        cols = line.split(SEP_0)
         key = cols[0]
         val = cols[1]? || ""
 
@@ -101,18 +103,18 @@ class Chivi::Dict
     self
   end
 
-  def set(key : String, val : String) : String
+  def set(key : String, val : String)
     item = Item.new(key, val)
-    @mtimes[key] = Dict.mtime
+    @mtimes[key] = Dict.mtime(Time.utc)
 
     File.open(@file, "a") do |f|
-      f << key << SEP << val << SEP << mtime << "\n"
+      f << item << SEP_0 << mtime << "\n"
     end
 
     put(item)
   end
 
-  def del(key : String) : String
+  def del(key : String)
     set(key, "")
   end
 
@@ -120,9 +122,9 @@ class Chivi::Dict
     put(Item.new(key, val))
   end
 
-  def put(item : Item) : String
+  def put(item : Item)
     @size += 1 unless item.val.empty?
-    old_val = ""
+    old_val = [] of String
 
     node = item.key.chars.reduce(@trie) do |node, char|
       node.trie[char] ||= Node.new
@@ -184,9 +186,9 @@ class Chivi::Dict
   def save!(file : String = @file)
     File.open(file, "w") do |f|
       each do |item|
-        f << item.key << SEP << item.val
+        f << item
         if mtime = @mtimes[item.key]?
-          f << SEP << mtime
+          f << SEP_0 << mtime
         end
         f << "\n"
       end
