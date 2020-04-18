@@ -26,73 +26,41 @@ module Chivi
     add_spaces(nodes)
   end
 
-  HAN_NUM    = "零〇一二两三四五六七八九十百千"
-  TITLE_RE_0 = /^(第?(\p{Nd}+|\d+)([集卷]))([,.:]*)(.*)$/
-  TITLE_RE_1 = /^(第【?([\d\p{Nd}]+)】?([章节幕回]))([,.:]*)(.*)$/
-  TITLE_RE_2 = /^(第?【?([\p{Nd}]+|\d+)】?([章节幕回]))([,.:]*)(.*)$/
-  TITLE_RE_3 = /^(\p{Nd}+|\d+)([,.:]*)(.*)$/
+  TITLE_RE = /^(第([零〇一二两三四五六七八九十百千]+|\d+)([集卷章节幕回]))([,.:]*)(.*)$/
 
   def cv_title(dicts : Dicts, input : String)
     res = Nodes.new
+    space = false
 
-    frags = input.split(/\p{Z}/)
+    input.split(" ") do |title|
+      res << Node.new("", " ", 0) if space
 
-    if match = TITLE_RE_0.match(input)
-      _, zh_group, index, label, trash, title = match
-      vi_group = "#{vi_label(label)} #{Util.hanzi_int(index)}"
+      if match = TITLE_RE.match(title)
+        _, group, index, label, trash, title = match
 
-      res << Node.new(zh_group, vi_group, 0)
-
-      if title.empty?
-        res << Node.new(trash, "", 0) unless trash.empty?
-      else
-        res << Node.new(trash, ": ", 0) # unless trash.empty?
+        res << Node.new(group, vi_title(index, label), 0)
+        res << Node.new(trash, ":", 0) # unless trash.empty?
+        res << Node.new("", " ", 0) unless title.empty?
       end
 
-      input = title
-    end
-
-    if match = (TITLE_RE_1.match(input) || TITLE_RE_2.match(input))
-      _, pre_title, pre_trash, zh_group, index, label, trash, title = match
-
-      if pre_title.empty?
-        res << Node.new(pre_trash, "", 0) unless pre_trash.empty?
-      else
-        res.concat cv_plain(dicts, pre_title)
-        res << Node.new(pre_trash, " - ", 0) unless pre_trash.empty?
-      end
-
-      vi_group = "#{vi_label(label)} #{Util.hanzi_int(index)}"
-      res << Node.new(zh_group, vi_group, 0)
-    elsif match = TITLE_RE_3.match(input)
-      _, zh_index, trash, title = match
-      vi_index = "Chương #{Util.hanzi_int(zh_index)}"
-
-      res << Node.new(zh_index, vi_index, 0)
-    else
-      title = input
-      trash = ""
-    end
-
-    if title.empty?
-      res << Node.new(trash, "", 0) unless trash.empty?
-    else
-      res << Node.new(trash, ": ", 0) unless trash.empty?
-      res.concat cv_plain(dicts, title)
+      res.concat(cv_plain(dicts, title)) unless title.empty?
+      space = true
     end
 
     res
   end
 
-  private def vi_label(label : String)
+  private def vi_title(index : String, label = "")
+    int = Util.hanzi_int(index)
+
     case label
-    when "章" then "Chương"
-    when "卷" then "Quyển"
-    when "集" then "Tập"
-    when "节" then "Tiết"
-    when "幕" then "Màn"
-    when "回" then "Hồi"
-    else          label
+    when "章" then "Chương #{int}"
+    when "卷" then "Quyển #{int}"
+    when "集" then "Tập #{int}"
+    when "节" then "Tiết #{int}"
+    when "幕" then "Màn #{int}"
+    when "回" then "Hồi #{int}"
+    else          "Chương #{int}"
     end
   end
 
@@ -124,7 +92,7 @@ module Chivi
         weight = weights[i] + (size + bonus) ** (1 + bonus)
 
         j = i + size
-        if weight >= weights[j]
+        if weight > weights[j]
           weights[j] = weight
           selects[j] = Node.new(item.key, item.vals[0], dic)
         end
