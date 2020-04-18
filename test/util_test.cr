@@ -1,4 +1,4 @@
-require "../src/util"
+require "../src/chivi/util"
 
 # puts Chivi::Util.split_head("第十三集 龙章凤仪 第一章 屠龙之术")
 # puts Chivi::Util.split_head("第一章 狠狠的一把")
@@ -7,5 +7,5 @@ require "../src/util"
 # puts Chivi::Util.split_head("第一回")
 # puts Chivi::Util.split_head("xxx  ")
 
-puts Chivi::Util.titlecase("xxx  x x")
+puts Chivi::Util.titleize("xxx  x x")
 puts Chivi::Util.slugify("xxx  x x")

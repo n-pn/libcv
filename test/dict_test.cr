@@ -1,6 +1,6 @@
-require "../src/dict"
+require "../src/chivi"
 
-test = Chivi::Dict.new "test/test.txt"
+test = Chivi::Dict.new "test/data/test.txt"
 
 print "\nset abc to abc: ", test.set("abc", "abc")
 
