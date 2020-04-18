@@ -24,5 +24,3 @@ text.split("\n").map(&.strip).reject(&.empty?).each_with_index do |line, idx|
     puts Chivi.cv_plain(dicts, line).vi_text
   end
 end
-
-puts Chivi.cv_plain(dicts, "[综恐]这什么鬼东西！／what_the_fuck_!--落漠").vi_text

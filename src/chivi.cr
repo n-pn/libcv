@@ -74,27 +74,35 @@ module Chivi
       weights << idx + 1.0
     end
 
+    csize = chars.size + 1
     dsize = dicts.size + 1
 
-    chars.each_with_index do |char, i|
-      choices = {} of Int32 => Tuple(Dict::Item, Int32)
+    chars.each_with_index do |char, idx|
+      items = {} of Int32 => Dict::Item
+      picks = {} of Int32 => Int32
 
-      dicts.each_with_index do |dict, j|
-        dict.scan(chars, i).each do |item|
-          choices[item.key.size] = {item, j + 1}
+      dicts.each_with_index do |dict, jdx|
+        dict.scan(chars, idx).each do |item|
+          items[item.key.size] = item
+          picks[item.key.size] = jdx + 1
         end
       end
 
-      choices.each do |size, entry|
-        item, dic = entry
+      pos_bonus = (csize - idx) / csize + 1
 
-        bonus = dic / dsize
-        weight = weights[i] + (size + bonus) ** (1 + bonus)
+      picks.each do |size, pick|
+        item = items[size]
+        next if item.vals.empty?
 
-        j = i + size
-        if weight > weights[j]
-          weights[j] = weight
-          selects[j] = Node.new(item.key, item.vals[0], dic)
+        dic_bonus = pick / dsize
+
+        item_weight = (size + dic_bonus ** pos_bonus) ** (1 + dic_bonus)
+        gain_weight = weights[idx] + item_weight
+
+        jdx = idx + size
+        if gain_weight > weights[jdx]
+          weights[jdx] = gain_weight
+          selects[jdx] = Node.new(item.key, item.vals[0], pick)
         end
       end
     end
@@ -208,11 +216,13 @@ module Chivi
     add_space = false
 
     nodes.each do |node|
-      next if node.val.empty?
-
-      res << Node.new("", " ", 0) if add_space && space_before?(node.val[0])
-      res << node
-      add_space = node.dic > 0 || space_after?(node.val[-1])
+      if node.val.empty?
+        res << node
+      else
+        res << Node.new("", " ", 0) if add_space && space_before?(node.val[0])
+        res << node
+        add_space = node.dic > 0 || space_after?(node.val[-1])
+      end
     end
 
     res
