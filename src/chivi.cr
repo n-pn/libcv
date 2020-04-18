@@ -64,31 +64,35 @@ module Chivi
     end
   end
 
-  private def tokenize(dicts : Dicts, input : Array(Char))
+  private def tokenize(dicts : Dicts, chars : Array(Char))
+    dsize = dicts.size + 1
+    csize = chars.size + 1
+
     selects = [Node.new("", "")]
     weights = [0.0]
-    chars = Util.normalize(input)
 
-    input.each_with_index do |char, idx|
-      selects << Node.new(char, chars[idx])
+    norms = chars.map_with_index do |char, idx|
+      norm = Util.normalize(char)
+
       weights << idx + 1.0
+      selects << Node.new(char, norm)
+
+      norm
     end
 
-    csize = chars.size + 1
-    dsize = dicts.size + 1
-
-    chars.each_with_index do |char, idx|
+    0.upto(chars.size) do |idx|
       items = {} of Int32 => Dict::Item
       picks = {} of Int32 => Int32
 
       dicts.each_with_index do |dict, jdx|
-        dict.scan(chars, idx).each do |item|
-          items[item.key.size] = item
-          picks[item.key.size] = jdx + 1
+        dict.scan(norms, idx).each do |item|
+          key = item.key.size
+          items[key] = item
+          picks[key] = jdx + 1
         end
       end
 
-      pos_bonus = (csize - idx) / csize + 1
+      idx_bonus = (csize - idx) / csize + 1
 
       picks.each do |size, pick|
         item = items[size]
@@ -96,7 +100,7 @@ module Chivi
 
         dic_bonus = pick / dsize
 
-        item_weight = (size + dic_bonus ** pos_bonus) ** (1 + dic_bonus)
+        item_weight = (size + dic_bonus ** idx_bonus) ** (1 + dic_bonus)
         gain_weight = weights[idx] + item_weight
 
         jdx = idx + size
@@ -107,7 +111,7 @@ module Chivi
       end
     end
 
-    idx = input.size
+    idx = chars.size
     res = Nodes.new
 
     while idx > 0

@@ -60,4 +60,8 @@ class Chivi::Nodes < Array(Chivi::Node)
   def vi_text
     String.build { |io| vi_text(io) }
   end
+
+  def to_s(io)
+    each { |item| item.to_json(io) }
+  end
 end
